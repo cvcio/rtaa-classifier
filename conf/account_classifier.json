@@ -1,0 +1,7 @@
+{
+    "model_name": "account_catboost_classifier_twitter_v1",
+    "type": "catboost",
+    "path": "models/account_catboost_classifier_twitter_v1.model",
+    "tokenizer": null,
+    "classifier": null
+}

@@ -1,0 +1,24 @@
+name: rtaa-classifier
+channels:
+  - defaults
+dependencies:
+  - pip:
+      - appdirs==1.4.4
+      - asgiref==3.4.1
+      - beautifulsoup4==4.9.3
+      - black==21.6b0
+      - click==8.0.1
+      - grpcio==1.38.1
+      - grpcio-tools==1.38.1
+      - h11==0.12.0
+      - mypy-extensions==0.4.3
+      - pathspec==0.8.1
+      - protobuf==3.17.3
+      - python-dotenv==0.18.0
+      - regex==2021.7.1
+      - six==1.16.0
+      - soupsieve==2.2.1
+      - toml==0.10.2
+      - uvicorn==0.14.0
+      - uvloop==0.15.2
+prefix: /home/andefined/anaconda3/envs/rtaa-classifier

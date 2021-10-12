@@ -1,0 +1,7 @@
+{
+    "model_name": "comment_classifier",
+    "type": "transformers",
+    "path": null,
+    "tokenizer": "/media/andefined/data/andefined/data/ai-models/roberta-el-uncased-twitter-v1",
+    "classifier": "/media/andefined/data/andefined/data/ai-models/roberta-el-uncased-twitter-toxic/6-5e5"
+}

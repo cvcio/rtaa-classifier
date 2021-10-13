@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z#github.com/cvcio/proto/cvcio/common',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x17\x63vcio/common/meta.proto\x12\x06\x63ommon\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x13tagger/tagger.proto\"\xe9\x02\n\x04Meta\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0e\n\x06source\x18\x02 \x01(\t\x12\x13\n\x0bscreen_name\x18\x03 \x01(\t\x12`\n\x12\x63omment_created_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.TimestampB(\x9a\x84\x9e\x03#json:\"comment_created_at,omitempty\"\x12Z\n\x0fuser_created_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.TimestampB%\x9a\x84\x9e\x03 json:\"user_created_at,omitempty\"\x12V\n\rclassified_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.TimestampB#\x9a\x84\x9e\x03\x1ejson:\"classified_at,omitempty\"\x12\x0c\n\x04link\x18\x07 \x01(\t\x12\x0c\n\x04lang\x18\x08 \x01(\tB%Z#github.com/cvcio/proto/cvcio/commonb\x06proto3'
+  serialized_pb=b'\n\x17\x63vcio/common/meta.proto\x12\x06\x63ommon\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x13tagger/tagger.proto\"\x8d\x03\n\x04Meta\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0e\n\x06source\x18\x02 \x01(\t\x12\x13\n\x0bscreen_name\x18\x03 \x01(\t\x12`\n\x12\x63omment_created_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.TimestampB(\x9a\x84\x9e\x03#json:\"comment_created_at,omitempty\"\x12Z\n\x0fuser_created_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.TimestampB%\x9a\x84\x9e\x03 json:\"user_created_at,omitempty\"\x12V\n\rclassified_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.TimestampB#\x9a\x84\x9e\x03\x1ejson:\"classified_at,omitempty\"\x12\x0c\n\x04link\x18\x07 \x01(\t\x12\x0c\n\x04lang\x18\x08 \x01(\t\x12\x11\n\tthreshold\x18\t \x01(\x01\x12\x0f\n\x07version\x18\n \x01(\tB%Z#github.com/cvcio/proto/cvcio/commonb\x06proto3'
   ,
   dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,tagger_dot_tagger__pb2.DESCRIPTOR,])
 
@@ -92,6 +92,20 @@ _META = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='threshold', full_name='common.Meta.threshold', index=8,
+      number=9, type=1, cpp_type=5, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='version', full_name='common.Meta.version', index=9,
+      number=10, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -105,7 +119,7 @@ _META = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=90,
-  serialized_end=451,
+  serialized_end=487,
 )
 
 _META.fields_by_name['comment_created_at'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP

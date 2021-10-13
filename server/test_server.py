@@ -1,25 +1,32 @@
+import unittest
 import grpc
 
-from internal.cvcio.classification.accounts_pb2 import TwitterAccount
-from internal.cvcio.common.predictions_pb2 import Prediction
+from internal.cvcio.classification.accounts_pb2 import TwitterAccount, ResponseAccount
 from internal.cvcio.classification.accounts_pb2_grpc import AccountServiceStub
 
-from internal.cvcio.classification.comments_pb2 import Comment
+from internal.cvcio.classification.comments_pb2 import Comment, ResponseToxic
 from internal.cvcio.classification.comments_pb2_grpc import CommentServiceStub
 
 
-def run():
-    # NOTE(gRPC Python Team): .close() is possible on a channel and should be
-    # used in circumstances in which the with statement does not fit the needs
-    # of the code.
-    with grpc.insecure_channel(
+class TestChannel(unittest.TestCase):
+    channel = grpc.insecure_channel(
         "0.0.0.0:50051", options=(("grpc.enable_http_proxy", 0),)
-    ) as channel:
-        account_stub = AccountServiceStub(channel)
-        comment_stub = CommentServiceStub(channel)
+    )
 
-        print("getUser---------------------------------")
-        res = account_stub.ClassifyTwitterAccount(
+    def test_0(self):
+        self.assertEqual(type(self.channel), grpc._channel.Channel)
+        self.channel.close()
+
+
+class TestClassifyTwitterAccount(unittest.TestCase):
+    channel = grpc.insecure_channel(
+        "0.0.0.0:50051", options=(("grpc.enable_http_proxy", 0),)
+    )
+
+    account_stub = AccountServiceStub(channel)
+
+    def test_0(self):
+        res = self.account_stub.ClassifyTwitterAccount(
             TwitterAccount(
                 followers=1,
                 friends=2,
@@ -35,17 +42,28 @@ def run():
                 actions=12.0,
             )
         )
-        print(res)
-        print("----------------------------------------")
-        print("getComment------------------------------")
-        res = comment_stub.ClassifyToxic(
+        self.assertEqual(type(res), ResponseAccount)
+        self.assertEqual(len(res.predictions), 4)
+        self.channel.close()
+
+
+class TestClassifyToxic(unittest.TestCase):
+    channel = grpc.insecure_channel(
+        "0.0.0.0:50051", options=(("grpc.enable_http_proxy", 0),)
+    )
+
+    comment_stub = CommentServiceStub(channel)
+
+    def test_0(self):
+        res = self.comment_stub.ClassifyToxic(
             Comment(
                 text="@AdonisGeorgiadi @ArisPortosalte Αφήστε επιτέλους τις πολιτικές μεσαίου χώρου και κέντρου και ασκείστε δεξιά πολιτική επιτέλους ,του Κούλη θα του γυρίσει μπούμερανγκ η πολιτική του κέντρου.Αφήσατε τους λαθρομετανάστες  να αλωνίζον ,δεν αγγίξατε κανέναν στο δημόσιο ,οι μπαχαλάκηδες κάνουν βόλτες.Είστε ξεφτίλες. "
             )
         )
-        print(res)
-        print("----------------------------------------")
+        self.assertEqual(type(res), ResponseToxic)
+        self.assertEqual(len(res.predictions), 8)
+        self.channel.close()
 
 
 if __name__ == "__main__":
-    run()
+    unittest.main()

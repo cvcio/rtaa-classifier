@@ -6,7 +6,8 @@ from internal.cvcio.classification import accounts_pb2 as cvcio_dot_classificati
 
 
 class AccountServiceStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """AccountService Microservice
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -14,18 +15,34 @@ class AccountServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.DetectTwitterAccount = channel.unary_unary(
-                '/classification.AccountService/DetectTwitterAccount',
+        self.ClassifyTwitterAccount = channel.unary_unary(
+                '/classification.AccountService/ClassifyTwitterAccount',
                 request_serializer=cvcio_dot_classification_dot_accounts__pb2.TwitterAccount.SerializeToString,
                 response_deserializer=cvcio_dot_classification_dot_accounts__pb2.ResponseAccount.FromString,
+                )
+        self.ClassifyTwitterAccounts = channel.unary_unary(
+                '/classification.AccountService/ClassifyTwitterAccounts',
+                request_serializer=cvcio_dot_classification_dot_accounts__pb2.TwitterAccountList.SerializeToString,
+                response_deserializer=cvcio_dot_classification_dot_accounts__pb2.ResponseAccountList.FromString,
                 )
 
 
 class AccountServiceServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """AccountService Microservice
+    """
 
-    def DetectTwitterAccount(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+    def ClassifyTwitterAccount(self, request, context):
+        """ClassifyTwitterAccount classifies a single TwitterAccount 
+        returns a ResponseAccount message
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ClassifyTwitterAccounts(self, request, context):
+        """ClassifyTwitterAccount classifies a list of TwitterAccount messages (TwitterAccountList)
+        returns a list of ResponseAccount messages (ResponseAccountList)
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -33,10 +50,15 @@ class AccountServiceServicer(object):
 
 def add_AccountServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'DetectTwitterAccount': grpc.unary_unary_rpc_method_handler(
-                    servicer.DetectTwitterAccount,
+            'ClassifyTwitterAccount': grpc.unary_unary_rpc_method_handler(
+                    servicer.ClassifyTwitterAccount,
                     request_deserializer=cvcio_dot_classification_dot_accounts__pb2.TwitterAccount.FromString,
                     response_serializer=cvcio_dot_classification_dot_accounts__pb2.ResponseAccount.SerializeToString,
+            ),
+            'ClassifyTwitterAccounts': grpc.unary_unary_rpc_method_handler(
+                    servicer.ClassifyTwitterAccounts,
+                    request_deserializer=cvcio_dot_classification_dot_accounts__pb2.TwitterAccountList.FromString,
+                    response_serializer=cvcio_dot_classification_dot_accounts__pb2.ResponseAccountList.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -46,10 +68,11 @@ def add_AccountServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class AccountService(object):
-    """Missing associated documentation comment in .proto file."""
+    """AccountService Microservice
+    """
 
     @staticmethod
-    def DetectTwitterAccount(request,
+    def ClassifyTwitterAccount(request,
             target,
             options=(),
             channel_credentials=None,
@@ -59,8 +82,25 @@ class AccountService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/classification.AccountService/DetectTwitterAccount',
+        return grpc.experimental.unary_unary(request, target, '/classification.AccountService/ClassifyTwitterAccount',
             cvcio_dot_classification_dot_accounts__pb2.TwitterAccount.SerializeToString,
             cvcio_dot_classification_dot_accounts__pb2.ResponseAccount.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ClassifyTwitterAccounts(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/classification.AccountService/ClassifyTwitterAccounts',
+            cvcio_dot_classification_dot_accounts__pb2.TwitterAccountList.SerializeToString,
+            cvcio_dot_classification_dot_accounts__pb2.ResponseAccountList.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

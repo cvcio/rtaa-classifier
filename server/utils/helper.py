@@ -14,7 +14,7 @@ def read_model(filename):
 
 
 def read_pickle(filename):
-    with open(path, "rb") as file:
+    with open(filename, "rb") as file:
         try:
             while True:
                 yield pickle.load(file)
@@ -36,3 +36,4 @@ class Model:
         self.type = model.type
         self.tokenizer = model.tokenizer if model.tokenizer else ""
         self.classifier = model.classifier if model.classifier else ""
+        self.version = model.version if model.version else "v1"

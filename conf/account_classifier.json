@@ -3,5 +3,6 @@
     "type": "catboost",
     "path": "models/account_catboost_classifier_twitter_v1.model",
     "tokenizer": null,
-    "classifier": null
+    "classifier": null,
+    "version": "v1"
 }

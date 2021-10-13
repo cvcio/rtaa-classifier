@@ -14,17 +14,28 @@ class CommentServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.DetectToxic = channel.unary_unary(
-                '/classification.CommentService/DetectToxic',
+        self.ClassifyToxic = channel.unary_unary(
+                '/classification.CommentService/ClassifyToxic',
                 request_serializer=cvcio_dot_classification_dot_comments__pb2.Comment.SerializeToString,
                 response_deserializer=cvcio_dot_classification_dot_comments__pb2.ResponseToxic.FromString,
+                )
+        self.ClassifyToxicList = channel.unary_unary(
+                '/classification.CommentService/ClassifyToxicList',
+                request_serializer=cvcio_dot_classification_dot_comments__pb2.CommentList.SerializeToString,
+                response_deserializer=cvcio_dot_classification_dot_comments__pb2.ResponseToxicList.FromString,
                 )
 
 
 class CommentServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def DetectToxic(self, request, context):
+    def ClassifyToxic(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ClassifyToxicList(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -33,10 +44,15 @@ class CommentServiceServicer(object):
 
 def add_CommentServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'DetectToxic': grpc.unary_unary_rpc_method_handler(
-                    servicer.DetectToxic,
+            'ClassifyToxic': grpc.unary_unary_rpc_method_handler(
+                    servicer.ClassifyToxic,
                     request_deserializer=cvcio_dot_classification_dot_comments__pb2.Comment.FromString,
                     response_serializer=cvcio_dot_classification_dot_comments__pb2.ResponseToxic.SerializeToString,
+            ),
+            'ClassifyToxicList': grpc.unary_unary_rpc_method_handler(
+                    servicer.ClassifyToxicList,
+                    request_deserializer=cvcio_dot_classification_dot_comments__pb2.CommentList.FromString,
+                    response_serializer=cvcio_dot_classification_dot_comments__pb2.ResponseToxicList.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -49,7 +65,7 @@ class CommentService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def DetectToxic(request,
+    def ClassifyToxic(request,
             target,
             options=(),
             channel_credentials=None,
@@ -59,8 +75,25 @@ class CommentService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/classification.CommentService/DetectToxic',
+        return grpc.experimental.unary_unary(request, target, '/classification.CommentService/ClassifyToxic',
             cvcio_dot_classification_dot_comments__pb2.Comment.SerializeToString,
             cvcio_dot_classification_dot_comments__pb2.ResponseToxic.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ClassifyToxicList(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/classification.CommentService/ClassifyToxicList',
+            cvcio_dot_classification_dot_comments__pb2.CommentList.SerializeToString,
+            cvcio_dot_classification_dot_comments__pb2.ResponseToxicList.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

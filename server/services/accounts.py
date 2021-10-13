@@ -13,9 +13,7 @@ class AccountClassifier(AccountServiceServicer):
     Civic Information Office from 2016 until today (17/07/2021),
     with 5000 handpicked users in the open-source version and more than
     25000 users in the production version.
-    The model is just a small snapshot of our production version,
-    with significant results though.
-    We use the RandomForest Classifier to predict user classes (y)
+    We use the CatBoost Classifier to predict user classes
     """
 
     def __init__(self, model):
@@ -27,19 +25,20 @@ class AccountClassifier(AccountServiceServicer):
         if self.model_meta.type == "random_forest":
             self.model = pickle.load(open(self.model_meta.path, "rb"))
             self.model.set_params(n_jobs=1)
-            logging.info("Random Forest Loaded")
+            logging.debug("Random Forest {} Loaded".format(self.model_meta.version))
 
         if self.model_meta.type == "catboost":
             from catboost import CatBoostClassifier
 
             self.model = CatBoostClassifier(task_type="CPU")
             self.model.load_model(self.model_meta.path)
+            logging.debug("CatBoost {} Loaded".format(self.model_meta.version))
 
         """
         Set Output Classes
         """
         self.classes = self.model.classes_
-        logging.info("Model Classes %s", self.classes)
+        logging.debug("Model Classes %s", self.classes)
 
     def mapClass(self, intClass):
         """
@@ -47,7 +46,7 @@ class AccountClassifier(AccountServiceServicer):
         """
         switcher = {
             1.0: "INFLUENCER",
-            2.0: "ACTIVE",
+            2.0: "NORMAL",
             3.0: "AMPLIFIER",
             4.0: "UNKNOWN",
             5.0: "NEW",
@@ -55,14 +54,14 @@ class AccountClassifier(AccountServiceServicer):
 
         return switcher.get(intClass, "UNKNOWN")
 
-    def DetectTwitterAccount(self, request, context):
+    def ClassifyTwitterAccount(self, request, context):
         """
-        DetectTwitterAccount gRPC endpoint
+        ClassifyTwitterAccount gRPC endpoint
         UserFeatures:
             Followers, Friends, Statuses,
             Favorites, Lists, Dates
         UserClass:
-            Label: INFLUENCER, ACTIVE, AMPLIFIER, UNKNOWN, NEW
+            Label: INFLUENCER, NORMAL, AMPLIFIER, UNKNOWN, NEW
             Score: double
         Runs the classifier (random forest) with UserFeatures
         Returns UserClass
@@ -117,8 +116,11 @@ class AccountClassifier(AccountServiceServicer):
             for i, x in enumerate(proba[0])
         ]
         logging.debug(
-            "Prediction -- CLASS: %s | SCORE: %s",
+            "(ClassifyTwitterAccount) Prediction -- CLASS: %s | SCORE: %.2f",
             self.classes[argmax(proba)],
             max(proba[0]),
         )
         return ResponseAccount(predictions=predict)
+
+    def ClassifyTwitterAccountList(self, request, context):
+        return None

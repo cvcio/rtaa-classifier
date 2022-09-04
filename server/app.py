@@ -4,29 +4,27 @@ GRPC Multi Classification Server
 """
 import os
 import logging
-from dotenv import load_dotenv
+
 from config.config import AppConfig
+from dotenv import load_dotenv
 
 from grpcserver.server import GRPCServer
-from internal.cvcio.classification.accounts_pb2_grpc import (
-    add_AccountServiceServicer_to_server,
-)
-from internal.cvcio.classification.comments_pb2_grpc import (
-    add_CommentServiceServicer_to_server,
-)
+
 from services.accounts import AccountClassifier
 from services.comments import CommentClassifier
 
-from utils.helper import read_model, Model
+from proto.rtaa.classification.accounts.v1.accounts_pb2_grpc import (
+    add_AccountServiceServicer_to_server,
+)
+from proto.rtaa.classification.comments.v1.comments_pb2_grpc import (
+    add_CommentServiceServicer_to_server,
+)
+
+from utils.helper import read_model
 
 
 def main():
-    try:
-        env = os.environ["ENV"]
-    except KeyError:
-        env = "development"
-
-    load_dotenv(f".env.{env}")  # take environment variables from .env.
+    load_dotenv()  # take environment variables from .env.
 
     # load conf from
     conf = AppConfig(os.environ)
@@ -36,20 +34,20 @@ def main():
 
     # start the server
     server = GRPCServer(host=conf.HOSTNAME, port=conf.PORT)
-
+    
     # register available services
     # service account classification
     server.RegisterService(
         AccountClassifier,
         add_AccountServiceServicer_to_server,
-        Model(read_model("conf/account_classifier.json")),
+        read_model("conf/account_classifier.json"),
     )
 
     # service comment classification
     server.RegisterService(
         CommentClassifier,
         add_CommentServiceServicer_to_server,
-        Model(read_model("conf/comment_classifier.json")),
+        read_model("conf/comment_classifier.json"),
     )
     # start the server
     server.Serve()

@@ -1,8 +1,8 @@
 {
-    "model_name": "account_catboost_classifier_twitter_v1",
+    "model_name": "account_catboost_classifier_twitter_v1-no_digits",
     "type": "catboost",
-    "path": "models/account_catboost_classifier_twitter_v1.model",
+    "path": "models/account_catboost_classifier_twitter_v1-no_digits.model",
     "tokenizer": null,
-    "classifier": null,
-    "version": "v1"
+    "version": "v1",
+    "enabled": true
 }

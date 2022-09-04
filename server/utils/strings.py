@@ -1,15 +1,15 @@
-import pandas as pd
-import numpy as np
-import re
-import unicodedata
 import emoji
 import demoji
-import unidecode
 import html
+import numpy as np
+import pandas as pd
+import re
+import unicodedata
+import unidecode
 
-from textacy.preprocessing.normalize import repeating_chars
 from itertools import groupby
 from string import punctuation
+from textacy.preprocessing.normalize import repeating_chars
 
 emoticons_str = r"""
     (?:
@@ -37,7 +37,7 @@ tokens_re = re.compile(r"(" + "|".join(regex_str) + ")", re.VERBOSE | re.IGNOREC
 emoticon_re = re.compile(r"^" + emoticons_str + "$", re.VERBOSE | re.IGNORECASE)
 control_char_regex = re.compile(r"[\r\n\t]+")
 # translate table for punctuation
-transl_table = dict([(ord(x), ord(y)) for x, y in zip(u"‘’´“”–-", u"'''\"\"--")])
+transl_table = dict([(ord(x), ord(y)) for x, y in zip("‘’´“”–-", "'''\"\"--")])
 punc = set(punctuation) - set(".")
 
 

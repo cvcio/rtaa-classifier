@@ -1,4 +1,3 @@
-import os
 from typing import get_type_hints, Union
 
 
@@ -20,7 +19,7 @@ class AppConfig:
     LOG_FORMAT: str
 
     HOSTNAME: str = "0.0.0.0"
-    PORT: int = 55051
+    PORT: int = 55052
 
     """
     Map environment variables to class fields according to these rules:

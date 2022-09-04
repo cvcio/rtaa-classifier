@@ -9,16 +9,16 @@ from concurrent import futures
 class GRPCServer(object):
     @property
     def instance(self):
-        return self.__server
+        return self.server
 
     def __init__(self, host="[::]", port=50051):
         options = (("grpc.so_reuseport", 1),)
-        self.__host = host
-        self.__port = port
-        self.__server = grpc.server(
+        self.host = host
+        self.port = port
+        self.server = grpc.server(
             futures.ThreadPoolExecutor(max_workers=10), options=options
         )
-        # signal.signal(signal.SIGINT, self.handleSignals)
+        signal.signal(signal.SIGINT, self.handleSignals)
 
     def handleSignals(self, signal, frame):
         """
@@ -41,11 +41,11 @@ class GRPCServer(object):
         """
         start the service server
         """
-        url = f"{self.__host}:{self.__port}"
+        url = f"{self.host}:{self.port}"
         logging.debug(f"Starting GRPC Server at {url}")
 
-        self.__server.add_insecure_port(url)
-        self.__server.start()
+        self.server.add_insecure_port(url)
+        self.server.start()
         try:
             while True:
                 time.sleep(60 * 60 * 24)
@@ -57,4 +57,4 @@ class GRPCServer(object):
         stop the service server
         """
         logging.debug("Stopping GRPC Server gracefully")
-        self.__server.stop(3)
+        self.server.stop(3)

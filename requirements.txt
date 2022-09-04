@@ -1,5 +1,0 @@
-grpcio==1.38.1
-grpcio-tools==1.38.1
-catboost==0.26.1
-numpy==1.19.5
-python-dotenv==0.18.0

@@ -1,126 +1,263 @@
+import grpc
 import logging
-import pickle
-from numpy import argmax, max
 
-from internal.cvcio.classification.accounts_pb2_grpc import AccountServiceServicer
-from internal.cvcio.classification.accounts_pb2 import ResponseAccount
-from internal.cvcio.common.predictions_pb2 import Prediction
+from datetime import datetime
+
+from google.rpc import code_pb2
+from google.rpc import status_pb2
+from grpc_status import rpc_status
+
+from numpy import argmax, max
+from typing import List
+from utils.calculations import division
+
+from proto.rtaa.classification.accounts.v1.accounts_pb2_grpc import AccountServiceServicer
+from proto.rtaa.classification.accounts.v1.accounts_pb2 import (
+    TwitterAccount,
+    TwitterAccountList,
+    ResponseAccount,
+    ResponseAccountList,
+)
+from proto.rtaa.classification.common.v1.predictions_pb2 import Prediction
+from utils.helper import Model, ModelMeta
 
 
 class AccountClassifier(AccountServiceServicer):
     """
     AccouncClassifier uses a predifined model created by
-    Civic Information Office from 2016 until today (17/07/2021),
+    Civic Information Office from 2016 until (17/07/2021),
     with 5000 handpicked users in the open-source version and more than
     25000 users in the production version.
     We use the CatBoost Classifier to predict user classes
     """
 
-    def __init__(self, model):
-        """
-        Load Trained Model
-        """
-        self.model_meta = model[0]
+    def __init__(self, model_meta) -> None:
+        # load pre-trained model
+        self.model_meta = ModelMeta(model_meta[0])
+        self.model = Model(self.model_meta).model
 
-        if self.model_meta.type == "random_forest":
-            self.model = pickle.load(open(self.model_meta.path, "rb"))
-            self.model.set_params(n_jobs=1)
-            logging.debug("Random Forest {} Loaded".format(self.model_meta.version))
-
-        if self.model_meta.type == "catboost":
-            from catboost import CatBoostClassifier
-
-            self.model = CatBoostClassifier(task_type="CPU")
-            self.model.load_model(self.model_meta.path)
-            logging.debug("CatBoost {} Loaded".format(self.model_meta.version))
-
+    def mapClass(self, c) -> str:
         """
-        Set Output Classes
+        Deprecated (used only with random forest classifier): Map Class from
+        int (as returned by classifier) to string.
         """
-        self.classes = self.model.classes_
-        logging.debug("Model Classes %s", self.classes)
 
-    def mapClass(self, intClass):
-        """
-        Map Class from int (as returned by classifier) to string
-        """
         switcher = {
-            1.0: "INFLUENCER",
-            2.0: "NORMAL",
-            3.0: "AMPLIFIER",
-            4.0: "UNKNOWN",
-            5.0: "NEW",
+            1: "INFLUENCER",
+            2: "NORMAL",
+            3: "AMPLIFIER",
+            4: "UNKNOWN",
+            5: "NEW",
         }
 
-        return switcher.get(intClass, "UNKNOWN")
+        return switcher.get(c, "UNKNOWN")
 
-    def ClassifyTwitterAccount(self, request, context):
-        """
-        ClassifyTwitterAccount gRPC endpoint
-        UserFeatures:
-            Followers, Friends, Statuses,
-            Favorites, Lists, Dates
-        UserClass:
-            Label: INFLUENCER, NORMAL, AMPLIFIER, UNKNOWN, NEW
-            Score: double
-        Runs the classifier (random forest) with UserFeatures
-        Returns UserClass
+    def buildFeatures(self, request: TwitterAccount) -> List:
+        """_summary_
+
+        Args:
+            request (TwitterAccount): _description_
+
+        Returns:
+            List: _description_
         """
 
-        """
-        Calculate Parameteres
-        """
-        FFR = request.followers / request.friends if request.friends > 0 else 0
-        STFV = request.statuses / request.favorites if request.favorites > 0 else 0
-        ACTIONS = request.statuses + request.favorites
-        ACTIONS = ACTIONS / request.dates if request.dates > 0 else 0
-        STF = request.statuses / request.followers if request.followers > 0 else 0
-        FVFR = request.favorites / request.friends if request.friends > 0 else 0
-        FL = request.followers / request.lists if request.lists > 0 else 0
+        created_at = request.created_at.ToDatetime()
+        observed_at = datetime.now()
+        dates_since = (observed_at - created_at).days
 
-        """
-        Set Features
-        Order: 
-            Followers, Friends, Statuses, Favorites, 
-            Lists, FFR, STFV, Actions, STF, FVFR, FL
-        """
-        features = [
-            request.followers,
-            request.friends,
-            request.statuses,
-            request.favorites,
-            request.lists,
-            FFR,
-            STFV,
-            ACTIONS,
-            STF,
-            FVFR,
-            FL,
-        ]
-
-        """
-        Get Probability
-        """
-        proba = self.model.predict_proba([features])
-        """
-        Select Class with Higher Probability
-        """
-        predict = [
-            Prediction(
-                label=self.mapClass(self.classes[i])
-                if self.model_meta.type == "random_forest"
-                else self.classes[i],
-                score=x,
-                prediction=1 if x > 0.5 else 0,
-            )
-            for i, x in enumerate(proba[0])
-        ]
-        logging.debug(
-            "(ClassifyTwitterAccount) Prediction -- CLASS: %s | SCORE: %.2f",
-            self.classes[argmax(proba)],
-            max(proba[0]),
+        actions_frequency = division(request.tweets + request.favorites, dates_since)
+        tweets_frequency = division(request.tweets, dates_since)
+        reputation = division(request.followers, request.followers + request.following)
+        credibility = division(request.listed, request.listed + request.followers)
+        followers_growth_rate = division(request.followers, dates_since)
+        following_growth_rate = division(request.following, dates_since)
+        favorites_growth_rate = division(request.favorites, dates_since)
+        listed_growth_rate = division(request.listed, dates_since)
+        followers_following_ratio = division(request.followers, request.following)
+        tweets_favorites_ratio = division(
+            request.tweets, request.tweets + request.favorites
         )
+        """
+        Features Order:
+            tweets, followers, following, favorites, listed,
+            default_profile, verified,
+            actions_frequency, tweets_frequency, reputation,
+            followers_growth_rate, following_growth_rate, favorites_growth_rate, listed_growth_rate,
+            followers_following_ratio, credibility, tweets_favorites_ratio
+        """
+        return [
+            request.followers,
+            request.following,
+            request.tweets,
+            request.favorites,
+            request.listed,
+            int(request.default_profile == True),
+            int(request.verified == True),
+            actions_frequency,
+            tweets_frequency,
+            reputation,
+            followers_growth_rate,
+            following_growth_rate,
+            favorites_growth_rate,
+            listed_growth_rate,
+            followers_following_ratio,
+            credibility,
+            tweets_favorites_ratio,
+        ]
+
+    def predicWithCatboost(self, features: List) -> List[Prediction]:
+        """
+        Runs the classifier on a pre-trained catboost model. Supported account
+        features:
+            tweets, followers, following, favorites, listed,
+            default_profile, verified, actions_frequency,
+            tweets_frequency, reputation, followers_growth_rate,
+            following_growth_rate, favorites_growth_rate, listed_growth_rate,
+            followers_following_ratio, credibility, tweets_favorites_ratio
+
+        Args:
+            features (List): A list with features: [
+                tweets, followers, following, favorites, listed,
+                default_profile, verified, actions_frequency,
+                tweets_frequency, reputation, followers_growth_rate,
+                following_growth_rate, favorites_growth_rate, listed_growth_rate,
+                followers_following_ratio, credibility, tweets_favorites_ratio
+            ].
+
+        Returns:
+            List[Prediction]: A list with predictions. Each prediction contains
+            a label (str) with valus [INFLUENCER, NORMAL, AMPLIFIER, UNKNOWN],
+            score (double) with values from 0.0-1.0 and prediction (int) with values
+            either 0 or 1.
+        """
+
+        if len(features) == 1:
+            # single prediction
+            if len(features[0]) != 17:
+                return [Prediction(label="UNKNOWN", score=1.0, prediction=1)]
+        else:
+            # multiple predictions
+            pass
+
+        # get probability
+        probabilities = self.model.predict_proba(features)
+        predict = []
+        for i, x in enumerate(probabilities):
+            p = []
+            for j, y in enumerate(x):
+                p.append(
+                    Prediction(
+                        label=self.model.classes_[j],
+                        score=y,
+                        prediction=1 if y > 0.5 else 0,
+                    )
+                )
+            predict.append(sorted(p, key=lambda s: s.score, reverse=True))
+            logging.info(
+                "(ClassifyTwitterAccount) Prediction -- CLASS: %s | SCORE: %.2f",
+                self.model.classes_[argmax(x)],
+                max(probabilities[i]),
+            )
+
+        return predict[0] if len(features) == 1 else predict
+
+    def ClassifyTwitterAccount(
+        self, request: TwitterAccount, context: grpc.ServicerContext
+    ) -> ResponseAccount:
+        """ClassifyTwitterAccount gRPC endpoint.
+
+        Args:
+            request (TwitterAccount): Request Account Proto.
+            context (grpc.ServicerContext)
+
+        Returns:
+            ResponseAccount
+        """
+
+        metadata = dict(context.invocation_metadata())
+        logging.debug("metadata: %s", metadata)
+
+        if self.model == None:
+            return context.abort_with_status(
+                rpc_status.to_status(
+                    status_pb2.Status(
+                        code=code_pb2.INTERNAL,
+                        message="Model Not Found or Not Implemented yet.",
+                    )
+                )
+            )
+
+        try:
+            features = self.buildFeatures(request)
+        except (ValueError, KeyError) as error:
+            return context.abort_with_status(
+                rpc_status.to_status(
+                    status_pb2.Status(
+                        code=code_pb2.INTERNAL,
+                        message=f"Unable to transform input data, error: {error.message}",
+                    )
+                )
+            )
+
+        # execute the pipeline
+        predict = self.predicWithCatboost([features])
+
+        # return response
         return ResponseAccount(predictions=predict)
 
-    def ClassifyTwitterAccountList(self, request, context):
-        return None
+    def ClassifyTwitterAccounts(
+        self, request: TwitterAccountList, context: grpc.ServicerContext
+    ) -> ResponseAccountList:
+        """_summary_
+
+        Args:
+            request (TwitterAccountList): _description_
+            context (grpc.ServicerContext)
+
+        Returns:
+            ResponseAccountList: _description_
+        """
+
+        metadata = dict(context.invocation_metadata())
+        logging.debug("metadata: %s", metadata)
+
+        if self.model == None:
+            return context.abort_with_status(
+                rpc_status.to_status(
+                    status_pb2.Status(
+                        code=code_pb2.INTERNAL,
+                        message="Model is disabled",
+                    )
+                )
+            )
+
+        if len(request.accounts) > 100:
+            return context.abort_with_status(
+                rpc_status.to_status(
+                    status_pb2.Status(
+                        code=code_pb2.PERMISSION_DENIED,
+                        message=f"Limit you request to MAX 100 accounts.",
+                    )
+                )
+            )
+
+        try:
+            features = [self.buildFeatures(r) for r in request.accounts]
+        except (ValueError, KeyError) as error:
+            return context.abort_with_status(
+                rpc_status.to_status(
+                    status_pb2.Status(
+                        code=code_pb2.INTERNAL,
+                        message=f"Unable to transform input data, error: {error.message}",
+                    )
+                )
+            )
+
+        # execute the pipeline
+        predict = self.predicWithCatboost(features)
+
+        # return response
+        return ResponseAccountList(
+            accounts=[ResponseAccount(predictions=p) for p in predict]
+        )

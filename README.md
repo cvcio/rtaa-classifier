@@ -1,35 +1,65 @@
+# RTAA &mdash; Classifier
 
-[![Language](https://img.shields.io/badge/Language-Go-blue.svg)](https://golang.org/)
-[![Build Status](https://github.com/cvcio/go-plagiarism/workflows/Go/badge.svg)](https://github.com/cvcio/go-plagiarism/actions)
-[![GoDoc](https://pkg.go.dev/badge/github.com/cvcio/go-plagiarism)](https://pkg.go.dev/github.com/cvcio/go-plagiarism)
-[![Go Report Card](https://goreportcard.com/badge/github.com/cvcio/go-plagiarism)](https://goreportcard.com/report/github.com/cvcio/go-plagiarism)
+Comments & Twitter accounts gRPC classification service.
 
-# RTAA-72
+There are two distinct classification services a) account classification and b) comment classification.
 
-> last updated at July 17, 2021
+AccouncClassifier uses a pre-trained model created by the [Civic Information Office](https://cvcio.org) from 2016 until 17/07/2021, with almost 12,000 handpicked accounts in the open-source version and more than 25,000 users in the production version, of which 7,000 (fake/genuine) accounts from [Botometer](https://botometer.osome.iu.edu/bot-repository/datasets.html).
 
-Target Audience Analysis (TAA), as described by many field manuals such as [FM 33-1-1](https://fas.org/irp/doddir/army/fm3-05-301.pdf), is the transitional phase where PSYOP planning moves toward execution, where all communications must be tailored to the local dynamics of the targeted audience in order to be successhfull. In conjuction with modern infromation warfare, which is about corrupting information processing systems and the way they operate, any social media such as Twitter, can be used to distribute and disseminate information in order to manipulate public opinion more efficient, more accurate and in real-time get the feedback and adapt to the conditions. A way to interrupt this proccess is by continuosly monitor these elements (distributors and messages), or at least establish a transparent mechanism to do so.
+In our approach we investigated the behavioural characteristics that differentiates normal accounts with "amplifiers" without addressing the binary logic -bot or not- instead, classifing accounts as Influencers, Active, Amplifier, and Unknown. We use the [CatBoost](https://catboost.ai/) Classifier to predict user classes Refer to [Twitter Accounts - CatBoost Classifier](notebooks/twitter-accounts-catboost-classifier.ipynb) notebook for more details.
 
-***Reverse* Target Audience Analysis**, is [CVCIO](https://cvcio.org)'s gRPC multi classification service where we try to reverse engineer this process, by tracking inauthentic account activity and the narratives they are trying to push forward.
+CommentsClassifier uses multiple pre-trained models and can be extented with any fintuned model supported by [Huggingface](https://huggingface.co/)'s [transformers](https://huggingface.co/docs/transformers/index) module. By default we use [detoxify-original](https://github.com/unitaryai/detoxify) for english comments, [detoxify-multilingual](https://github.com/unitaryai/detoxify) for italian, french, russian, portuguese, spanish and turkish and out own [comments-el-toxic](https://huggingface.co/cvcio/comments-el-toxic) for greek comments.
 
-## Endpoints / Methods
+## How to use
 
-#### DetectTwitterAccount
-#### DetectToxic
-#### DetectCategory (Coming Soon)
+```bash
+docker run --rm -it --name rtaa-classifier -p 50052:50052 cvcio/rtaa-72-rtaa-classifier:latest
+```
+
+## Development
+
+```bash
+# clone the repo
+git clone git@github.com:cvcio/rtaa-classifier.git
+cd rtaa-classifier
+
+# create the virtual environment (ex. with cobda)
+conda create --name rtaa-classifier python=3.9
+
+# install poetry package manager
+pip install poetry
+# install dependencies
+poetry install
+
+# run the service
+make serve
+```
+
+### Protos
+
+It is recommented not to re-generate thh stubs if you want to have the latest version. Alternatevely you must clone the [rtaa-72](https://github.com/cvcio/rtaa-72) repo and set the `PROTO_PATH` environment variable to that path. To build the protos, we use [buf](https://buf.build). Please refer to buf's documentation on how to install it, alternatevely you can run:
+
+```bash
+# install buf
+make buf-install
+
+# build protocol buffers
+# the command will download the latest version of github.com/cvcio/proto,
+# generate the stubs, and finally clean up the leftovers.
+make proto 
+```
 
 ## Contribution
 
-If you're new to contributing to Open Source on Github, [this guide](https://opensource.guide/how-to-contribute/) can help you get started. Please check out the contribution guide for more details on how issues and pull requests work. Before contributing be sure to review the [code of conduct](https://github.com/cvcio/covid-19-api/blob/main/CODE_OF_CONDUCT.md).
+If you're new to contributing to Open Source on Github, [this guide](https://opensource.guide/how-to-contribute/) can help you get started. Please check out the contribution guide for more details on how issues and pull requests work. Before contributing be sure to review the [code of conduct](https://github.com/cvcio/rtaa-classifier/blob/main/CODE_OF_CONDUCT.md).
 
-<a href="https://github.com/cvcio/go-plagiarism/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=cvcio/go-plagiarism" />
+<a href="https://github.com/cvcio/rtaa-classifier/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=cvcio/rtaa-classifier" />
 </a>
-
 
 ## License and Attribution
 
-In general, we are making this software publicly available for broad, noncommercial public use, including academics, journalists, policymakers, analysts the public in general.
+In general, we are making this software publicly available for broad, noncommercial public use, including academics, journalists, policymakers, researchers and the public in general.
 
 If you use this service, please let us know at [info@cvcio.org](mailto:info@cvcio.org).
 

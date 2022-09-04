@@ -1,8 +1,33 @@
 {
-    "model_name": "comment_classifier",
-    "type": "transformers",
-    "path": null,
-    "tokenizer": "cvcio/roberta-el-uncased-twitter-v1",
-    "classifier": "/media/andefined/data/andefined/data/ai-models/roberta-el-uncased-twitter-toxic/6-5e5",
-    "version": "v1"
+    "el": {
+        "model_name": "comments-el-toxic",
+        "type": "transformers",
+        "lang": "el",
+        "path": "cvcio/comments-el-toxic",
+        "tokenizer": "cvcio/roberta-el-news",
+        "version": "v1",
+        "enabled": true,
+        "supported_languages": ["el"]
+    },
+    "en": {
+        "model_name": "detoxify-original",
+        "type": "detoxify",
+        "lang": "en",
+        "path": "original",
+        "tokenizer": null,
+        "version": "v1",
+        "enabled": true,
+        "supported_languages": ["en"]
+    },
+    "und": {
+        "model_name": "detoxify-multilingual",
+        "type": "detoxify",
+        "lang": "und",
+        "path": "multilingual",
+        "tokenizer": null,
+        "version": "v1",
+        "enabled": true,
+        "primary": true,
+        "supported_languages": ["it", "fr", "ru", "pt", "es", "tr"]
+    }
 }
